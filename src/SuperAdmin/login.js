@@ -16,11 +16,10 @@ const LoginPage = () => {
       phone,
       password,
     });
-    console.log(response.success);
+
     if (response.success) {
       toast.success("Login successful!");
 
-      // Navigate to the dashboard
       navigate("/super-admin/dashboard/listing");
     } else {
       toast.success("Error occuried while login");

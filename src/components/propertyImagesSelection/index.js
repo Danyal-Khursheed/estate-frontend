@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaExclamationCircle } from "react-icons/fa";
 import { RiCameraAiFill } from "react-icons/ri";
 import ContactUsNow from "../../shared/contactUs";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { useImageStore } from "../image-store/image-store";
+import FileUpload from "../../utils/uploadImage"; // Import FileUpload Component
 
 const AddPictures = () => {
   const navigate = useNavigate();
@@ -12,15 +12,24 @@ const AddPictures = () => {
   const searchParams = new URLSearchParams(location.search);
   const transitionId = searchParams.get("transitionId");
   const categoryId = searchParams.get("categoryId");
-  const { selectedImages, setSelectedImages } = useImageStore();
 
-  const handleImageChange = (index, event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const updatedImages = [...selectedImages];
-      updatedImages[index] = URL.createObjectURL(file);
-      setSelectedImages(updatedImages);
-    }
+  // State to hold selected images
+  const [selectedImages, setSelectedImages] = useState([]);
+  console.log(selectedImages);
+
+  // Handle image upload by adding the image URL to the selectedImages state
+  const handleImageUpload = (imageUrl) => {
+    setSelectedImages((prevImages) => [
+      ...prevImages,
+      { url: imageUrl }, // Ensure each image has a URL property
+    ]);
+  };
+
+  const handleNext = () => {
+    localStorage.setItem("uploadedImages", JSON.stringify(selectedImages));
+    navigate(
+      `/property-video?transitionId=${transitionId}&categoryId=${categoryId}`
+    );
   };
 
   return (
@@ -54,45 +63,24 @@ const AddPictures = () => {
               </h3>
             </div>
 
+            {/* Render uploaded images or the upload button */}
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-              {selectedImages.map((image, index) => (
+              {Array.from({ length: 30 }).map((_, index) => (
                 <div
                   key={index}
                   className="relative border rounded-md p-2 flex items-center justify-center bg-gray-50"
                 >
-                  {image ? (
-                    <img
-                      src={image}
-                      alt={`Selected ${index + 1}`}
-                      className="w-full h-full object-cover rounded-md"
-                    />
-                  ) : (
-                    <label
-                      htmlFor={`image-input-${index}`}
-                      className="w-full h-full flex items-center justify-center text-blue-500 cursor-pointer"
-                    >
-                      <span className="text-5xl my-6 text-[#127b41]">
-                        <RiCameraAiFill />
-                      </span>
-                      <input
-                        type="file"
-                        id={`image-input-${index}`}
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(event) => handleImageChange(index, event)}
-                      />
-                    </label>
-                  )}
+                  {/* Render FileUpload component and handle the image uploads */}
+                  <FileUpload
+                    onImageUpload={handleImageUpload}
+                    presistFile={selectedImages[index]?.url} // Display uploaded image if exists
+                  />
                 </div>
               ))}
             </div>
             <button
               className="bg-[#127b41] text-white py-3 px-16 mt-4 rounded-md w-full hover:opacity-90 shadow-md"
-              onClick={() =>
-                navigate(
-                  `/property-video?transitionId=${transitionId}&categoryId=${categoryId}`
-                )
-              }
+              onClick={handleNext}
             >
               CONTINUE
             </button>
@@ -100,7 +88,7 @@ const AddPictures = () => {
         </div>
 
         {/* Right Section */}
-        <div className="w-full md:w-[30%] ">
+        <div className="w-full md:w-[30%]">
           <ContactUsNow />
         </div>
       </div>

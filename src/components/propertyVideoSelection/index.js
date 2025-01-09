@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { RiCameraAiFill } from "react-icons/ri";
 import ContactUsNow from "../../shared/contactUs";
 import { useNavigate, useLocation } from "react-router-dom";
+import FileUploadVideo from "../../utils/uploadVideo.js";
 
 const AddVideo = () => {
   const [selectedVideos, setSelectedVideos] = useState(Array(1).fill(null));
@@ -11,13 +11,20 @@ const AddVideo = () => {
   const transitionId = searchParams.get("transitionId");
   const categoryId = searchParams.get("categoryId");
 
-  const handleVideoChange = (index, event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const updatedVideos = [...selectedVideos];
-      updatedVideos[index] = URL.createObjectURL(file);
-      setSelectedVideos(updatedVideos);
-    }
+  const [videoUrl, setVideoUrl] = useState(null);
+  console.log(videoUrl);
+
+  // Function to handle the video URL after upload
+  const handleVideoUpload = (url) => {
+    setVideoUrl(url);
+    console.log("Video URL:", url);
+  };
+
+  const handleNext = () => {
+    localStorage.setItem("uploadedVideo", JSON.stringify(videoUrl));
+    navigate(
+      `/property-listing-form?transitionId=${transitionId}&categoryId=${categoryId}`
+    );
   };
 
   return (
@@ -60,15 +67,9 @@ const AddVideo = () => {
                       htmlFor={`video-input-${index}`}
                       className="w-full h-full flex items-center justify-center text-blue-500 cursor-pointer"
                     >
-                      <span className="text-5xl my-6 text-[#127b41] ">
-                        <RiCameraAiFill />
-                      </span>
-                      <input
-                        type="file"
-                        id={`video-input-${index}`}
-                        className="hidden"
-                        accept="video/*"
-                        onChange={(event) => handleVideoChange(index, event)}
+                      <FileUploadVideo
+                        onImageUpload={handleVideoUpload}
+                        presistFile={videoUrl}
                       />
                     </label>
                   )}
@@ -77,11 +78,7 @@ const AddVideo = () => {
             </div>
           </div>
           <button
-            onClick={() =>
-              navigate(
-                `/property-listing-form?transitionId=${transitionId}&categoryId=${categoryId}`
-              )
-            }
+            onClick={handleNext}
             className="w-fit bg-[#127b41] text-white py-3 px-28 mt-4 rounded-md  hover:opacity-90 shadow-md"
           >
             CONTINUE

@@ -14,7 +14,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-red-500 p-4 shadow">
+      <header className="p-4 shadow">
         <div className="flex items-center justify-between space-x-4">
           {/* Search Bar */}
           <div className="relative">

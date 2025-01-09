@@ -35,6 +35,7 @@ axiosInstance.interceptors.response.use(
   (error) => {
     // Handle errors globally
     const { response } = error;
+    console.log(response);
     if (response) {
       switch (response.status) {
         case 401:

@@ -4,7 +4,7 @@ import { RiCameraAiFill } from "react-icons/ri";
 import ContactUsNow from "../../shared/contactUs";
 import { FaInfoCircle } from "react-icons/fa";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { baseURl } from "../../Constant/constants";
 import { useImageStore } from "../image-store/image-store";
 import {
@@ -13,15 +13,18 @@ import {
   Marker,
   InfoWindow,
 } from "@react-google-maps/api";
+import { toast } from "react-hot-toast";
 // import TestGoogleMap from "../TestGoogleMap";
 
 const PropertyListingForm = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const transitionId = searchParams.get("transitionId");
   const categoryId = searchParams.get("categoryId");
   const id = JSON.parse(categoryId);
-  const { selectedImages } = useImageStore();
+  const phone = JSON.parse(localStorage.getItem("phone"));
+
   // State for city and neighborhood dropdowns
   // Coordinates for the map
   const [mapLocation, setMapLocation] = useState({
@@ -30,6 +33,11 @@ const PropertyListingForm = () => {
   });
   const [infoWindowContent, setInfoWindowContent] = useState(""); // For info window content
   const [mapLoaded, setMapLoaded] = useState(false); // Define mapLoaded state
+  const savedImages = JSON.parse(localStorage.getItem("uploadedImages"));
+  const urls = savedImages.map((item) => item.url);
+  console.log(urls);
+  console.log(savedImages);
+  const uploadedVideo = localStorage.getItem("uploadedVideo");
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedNeighborhood, setSelectedNeighborhood] = useState("");
@@ -58,10 +66,12 @@ const PropertyListingForm = () => {
     price: "",
     paymentType: "",
     contact: "",
-    videos: Array(1).fill(null),
-    images: selectedImages,
-    city: "", // Add city field
-    neighborhood: "", // Add neighborhood field
+    videos: uploadedVideo,
+    images: urls,
+    city: "",
+    neighborhood: "",
+    lat: "",
+    long: "",
   });
   // Fetch cities from the JSON file in public folder
   useEffect(() => {
@@ -70,12 +80,6 @@ const PropertyListingForm = () => {
       .then((data) => setCities(data))
       .catch((error) => console.error("Error loading cities:", error));
   }, []);
-  useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      images: selectedImages,
-    }));
-  }, [selectedImages]);
 
   const handleChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -180,6 +184,11 @@ const PropertyListingForm = () => {
           lat: location.lat,
           lng: location.lng,
         });
+        setFormData({
+          ...formData,
+          lat: location.lat, // Use location.lat
+          long: location.lng, // Use location.lng
+        });
       } else {
         console.error("Neighborhood not found");
       }
@@ -208,9 +217,10 @@ const PropertyListingForm = () => {
         `${baseURl}/property/createProperty`,
         formData
       );
-      console.log("Response:", response.data);
+      toast.success("Property created Successfull");
+      navigate("/dashboard/mylisting");
     } catch (error) {
-      console.error("Error submitting form:", error);
+      toast.error("Error submitting form:", error);
     }
   };
 
@@ -758,6 +768,7 @@ const PropertyListingForm = () => {
                 </span>
                 <input
                   type="text"
+                  value={phone}
                   placeholder="07728100666"
                   className="border border-gray-300 p-2 rounded-md w-full"
                   onChange={(e) => handleChange("contact", e.target.value)}
@@ -779,42 +790,28 @@ const PropertyListingForm = () => {
           <div className="bg-white shadow rounded-lg my-4 p-5">
             <h1 className="text-start text-xl pb-6 font-bold ">Video Reel</h1>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4">
-              <h3 className="text-start text-lg font-semibold py-1 px-12 rounded-t-lg  bg-black text-white inline-block">
-                Video
-              </h3>
+              {!uploadedVideo && (
+                <h3 className="text-start text-lg font-semibold py-1 px-12 rounded-t-lg  bg-black text-white inline-block">
+                  Video
+                </h3>
+              )}
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-4">
-              {formData.videos.map((video, index) => (
-                <div
-                  key={index}
-                  className="relative border rounded-md p-2 flex items-center justify-center bg-gray-50"
-                >
-                  {video ? (
-                    <video
-                      src={video}
-                      controls
-                      className="w-full h-full object-cover rounded-md"
-                    />
-                  ) : (
-                    <label
-                      htmlFor={`video-input-${index}`}
-                      className="w-full h-full flex items-center justify-center text-blue-500 cursor-pointer"
-                    >
-                      <span className="text-5xl my-6 text-[#127b41] ">
-                        <RiCameraAiFill />
-                      </span>
-                      <input
-                        type="file"
-                        id={`video-input-${index}`}
-                        className="hidden"
-                        accept="video/*"
-                        onChange={(event) => handleFileChange(index, event)}
-                      />
-                    </label>
-                  )}
-                </div>
-              ))}
+              {uploadedVideo ? (
+                <video
+                  src={uploadedVideo}
+                  controls
+                  className="w-full h-full object-cover rounded-md"
+                />
+              ) : (
+                <label className="w-full h-full flex items-center justify-center text-blue-500 cursor-pointer">
+                  <span className="text-5xl my-6 text-[#127b41] ">
+                    <RiCameraAiFill />
+                  </span>
+                  <input type="file" className="hidden" accept="video/*" />
+                </label>
+              )}
             </div>
           </div>
 
@@ -834,14 +831,14 @@ const PropertyListingForm = () => {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {formData.images.map((image, index) => (
+              {savedImages.map((image, index) => (
                 <div
                   key={index}
                   className="relative border rounded-md p-2 flex items-center justify-center bg-gray-50"
                 >
                   {image ? (
                     <img
-                      src={image}
+                      src={image.url}
                       alt={`Selected ${index + 1}`}
                       className="w-full h-full object-cover rounded-md"
                     />

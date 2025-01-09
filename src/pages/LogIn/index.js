@@ -400,7 +400,10 @@ const PasswordSection = ({ phone, password, onPasswordChange, onSubmit }) => (
     </div>
     <button
       className="w-full bg-blue-600 text-white font-medium rounded-md py-2 mb-5"
-      onClick={onSubmit}
+      onClick={() => {
+        localStorage.setItem("phone", phone);
+        onSubmit();
+      }}
     >
       Next
     </button>
