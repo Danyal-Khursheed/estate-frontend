@@ -1,0 +1,19 @@
+[
+  {
+    "id": "1",
+    "name": "Baghdad",
+    "neighborhoods": [
+      { "id": "101", "name": "9 Nissan" },
+      { "id": "102", "name": "Abu Dshir" }
+
+    ]
+  },
+  {
+    "id": "2",
+    "name": "Basra",
+    "neighborhoods": [
+      { "id": "201", "name": "Ashar" },
+      { "id": "202", "name": "Zubair" }
+    ]
+  }
+]
